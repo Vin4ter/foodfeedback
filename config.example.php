@@ -1,11 +1,16 @@
 <?php
-define('DB_HOST', '127.0.0.1');
+define('DB_HOST', 'localhost');
 define('DB_NAME', 'foodfeedback');
-define('DB_USER', 'admin');
-define('DB_PASS', '1234');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 
-define('APP_PEPPER', 'test-local-pepper');
+// Секрет для хэширования кодов и IP. ОБЯЗАТЕЛЬНО замените на случайную строку!
+define('APP_PEPPER', 'change-me-to-long-random-string');
+
 define('BASE_URL', 'http://localhost/foodfeedback');   // без слэша в конце
+// Ключ для API кассы (api/issue_code.php). Замените: openssl rand -hex 24
+define('API_KEY', 'change-me');
+
 define('RATE_LIMIT', 10);          // попыток отправки с одного IP
 define('RATE_WINDOW_MIN', 10);     // за N минут
 define('MAX_COMMENT', 500);

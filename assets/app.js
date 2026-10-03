@@ -9,36 +9,33 @@
       if (e.target.tagName !== 'BUTTON') return;
       var v = +e.target.dataset.v;
       box.dataset.rating = (box.dataset.rating == v) ? 0 : v; // повторный клик сбрасывает
-      paint(box);
+      var cur = +box.dataset.rating;
+      box.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', +x.dataset.v <= cur); });
     });
   });
-  function paint(box) {
-    var v = +box.dataset.rating;
-    box.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', +b.dataset.v <= v); });
+  function rating(key) {
+    return +document.querySelector('.stars[data-key="' + key + '"]').dataset.rating;
   }
   var err = document.getElementById('err');
   function showErr(m) { err.textContent = m; err.hidden = false; }
 
   document.getElementById('send').addEventListener('click', function () {
     err.hidden = true;
-    var items = [];
-    var bad = false;
-    document.querySelectorAll('.block').forEach(function (blk) {
-      var r = +blk.querySelector('.stars').dataset.rating;
-      if (!r) return;
-      var it = { category: +blk.dataset.cat, rating: r, comment: blk.querySelector('textarea').value };
-      if (it.category === 1) {
-        it.dish_id = +blk.querySelector('select').value;
-        if (!it.dish_id) { bad = true; }
-      }
-      items.push(it);
-    });
-    if (bad) return showErr('Выберите блюдо, которое оцениваете.');
-    if (!items.length) return showErr('Поставьте оценку хотя бы в одном пункте.');
+    var overall = rating('overall');
+    if (!overall) return showErr('Поставьте общую оценку.');
+    var dishIds = [];
+    document.querySelectorAll('.dish:checked').forEach(function (c) { dishIds.push(+c.value); });
     var btn = this; btn.disabled = true;
     fetch('api/submit.php', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: document.getElementById('code').value, items: items })
+      body: JSON.stringify({
+        code: document.getElementById('code').value,
+        dish_ids: dishIds,
+        overall: overall,
+        cleanliness: rating('cleanliness'),
+        service: rating('service'),
+        comment: document.getElementById('comment').value
+      })
     }).then(function (r) { return r.json(); }).then(function (d) {
       if (d.ok) {
         document.getElementById('formBox').hidden = true;

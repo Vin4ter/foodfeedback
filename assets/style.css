@@ -26,3 +26,12 @@ table{width:100%;border-collapse:collapse;margin:8px 0}th,td{text-align:left;pad
 .codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .ticket{border:1px dashed #999;border-radius:8px;padding:10px;text-align:center;font-family:monospace}.ticket div.qr{display:flex;justify-content:center;margin:6px 0}
 @media print{.noprint{display:none}body{background:#fff}.card{box-shadow:none;margin:0;max-width:none}}
+/* v2 */
+input[type=checkbox]{width:auto;margin:0}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:8px}
+.check{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid #e1e8e3;border-radius:10px;cursor:pointer}
+.check:has(input:checked){background:#e4f6ec;border-color:#1f9d62}
+.avg{font-weight:700;background:#fff7e0;border-radius:99px;padding:6px 12px;white-space:nowrap}
+.msg{background:#e4f6ec;color:#176b43;padding:10px 14px;border-radius:10px;margin:10px 0}
+.inline{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.inline input,.inline select{margin-top:0}

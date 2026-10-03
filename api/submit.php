@@ -17,40 +17,57 @@ $pdo->prepare('INSERT INTO rate_limits (ip_hash, hit_at) VALUES (?, NOW())')->ex
 // 2. Валидация
 $code = isset($in['code']) ? norm_code($in['code']) : '';
 if (strlen($code) !== 8) json_out(array('error' => 'Введите код с чека или подноса'), 422);
-$items = isset($in['items']) && is_array($in['items']) ? $in['items'] : array();
-if (!$items || count($items) > 3) json_out(array('error' => 'Оцените хотя бы один пункт'), 422);
 
-$clean = array(); $seen = array();
-foreach ($items as $it) {
-    $cat = isset($it['category']) ? (int)$it['category'] : 0;
-    $rating = isset($it['rating']) ? (int)$it['rating'] : 0;
-    if ($cat < 1 || $cat > 3 || isset($seen[$cat]) || $rating < 1 || $rating > 5) json_out(array('error' => 'Некорректные данные'), 422);
-    $seen[$cat] = 1;
-    $dish = null;
-    if ($cat === 1) {
-        $dish = isset($it['dish_id']) ? (int)$it['dish_id'] : 0;
-        $c = $pdo->prepare('SELECT COUNT(*) FROM dishes WHERE id=? AND active=1');
-        $c->execute(array($dish));
-        if (!$c->fetchColumn()) json_out(array('error' => 'Выберите блюдо'), 422);
-    }
-    $comment = isset($it['comment']) ? trim((string)$it['comment']) : '';
-    $comment = mb_substr(strip_tags($comment), 0, MAX_COMMENT);
-    $status = 'none';
-    if ($comment !== '') $status = is_suspicious($comment) ? 'pending' : 'approved'; else $comment = null;
-    $clean[] = array($cat, $dish, $rating, $comment, $status);
+$overall = isset($in['overall']) ? (int)$in['overall'] : 0;
+if ($overall < 1 || $overall > 5) json_out(array('error' => 'Поставьте общую оценку'), 422);
+
+$optional = array();
+foreach (array('cleanliness', 'service') as $k) {
+    $v = isset($in[$k]) ? (int)$in[$k] : 0;
+    if ($v < 0 || $v > 5) json_out(array('error' => 'Некорректные данные'), 422);
+    $optional[$k] = $v > 0 ? $v : null;
 }
 
-// 3. Погашение кода + запись отзывов в одной транзакции
+$dishIds = array();
+if (!empty($in['dish_ids']) && is_array($in['dish_ids'])) {
+    foreach ($in['dish_ids'] as $d) {
+        $d = (int)$d;
+        if ($d > 0) $dishIds[$d] = $d;
+    }
+    $dishIds = array_values($dishIds);
+    if (count($dishIds) > 30) json_out(array('error' => 'Слишком много блюд'), 422);
+}
+if ($dishIds) {
+    $ph = implode(',', array_fill(0, count($dishIds), '?'));
+    $c = $pdo->prepare('SELECT COUNT(*) FROM dishes WHERE active=1 AND id IN (' . $ph . ')');
+    $c->execute($dishIds);
+    if ((int)$c->fetchColumn() !== count($dishIds)) json_out(array('error' => 'Некорректный список блюд'), 422);
+}
+
+$comment = isset($in['comment']) ? trim((string)$in['comment']) : '';
+$comment = mb_substr(strip_tags($comment), 0, MAX_COMMENT);
+$status = 'none';
+if ($comment !== '') $status = is_suspicious($comment) ? 'pending' : 'approved';
+else $comment = null;
+
+// 3. Погашение кода + запись отзыва в одной транзакции
 $ts = date('Y-m-d H:00:00'); // округляем время до часа
 try {
     $pdo->beginTransaction();
-    $st = $pdo->prepare('SELECT id FROM tokens WHERE code_hash=? AND used=0 AND expires_at > NOW() FOR UPDATE');
+    $st = $pdo->prepare('SELECT id, canteen_id FROM tokens WHERE code_hash=? AND used=0 AND expires_at > NOW() FOR UPDATE');
     $st->execute(array(code_hash($code)));
-    $tid = $st->fetchColumn();
-    if (!$tid) { $pdo->rollBack(); json_out(array('error' => 'Код недействителен, просрочен или уже использован'), 403); }
-    $pdo->prepare('UPDATE tokens SET used=1, used_date=CURDATE() WHERE id=?')->execute(array($tid));
-    $ins = $pdo->prepare('INSERT INTO feedback (category_id, dish_id, rating, comment, comment_status, created_at) VALUES (?,?,?,?,?,?)');
-    foreach ($clean as $r) $ins->execute(array($r[0], $r[1], $r[2], $r[3], $r[4], $ts));
+    $tok = $st->fetch();
+    if (!$tok) { $pdo->rollBack(); json_out(array('error' => 'Код недействителен, просрочен или уже использован'), 403); }
+    $pdo->prepare('UPDATE tokens SET used=1, used_date=CURDATE() WHERE id=?')->execute(array($tok['id']));
+
+    $pdo->prepare('INSERT INTO reviews (canteen_id, overall_rating, cleanliness_rating, service_rating, comment, comment_status, created_at) VALUES (?,?,?,?,?,?,?)')
+        ->execute(array($tok['canteen_id'], $overall, $optional['cleanliness'], $optional['service'], $comment, $status, $ts));
+    $rid = $pdo->lastInsertId();
+
+    if ($dishIds) {
+        $ins = $pdo->prepare('INSERT INTO review_dishes (review_id, dish_id) VALUES (?, ?)');
+        foreach ($dishIds as $d) $ins->execute(array($rid, $d));
+    }
     $pdo->commit();
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();

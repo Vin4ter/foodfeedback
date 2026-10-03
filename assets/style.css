@@ -1,0 +1,28 @@
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f6f4;color:#1d2b24;line-height:1.45}
+.card{max-width:640px;margin:20px auto;background:#fff;border-radius:16px;padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.07)}
+.wide{max-width:1100px}
+h1{margin:0 0 6px}h2{font-size:1.05rem;margin:0 0 8px}
+.muted{color:#66766d}.small{font-size:.85rem}
+.field{display:block;font-weight:600;margin:14px 0}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid #cfd9d3;border-radius:10px;font:inherit;margin-top:6px;background:#fff}
+textarea{min-height:60px;resize:vertical}
+.block{border:1px solid #e1e8e3;border-radius:12px;padding:14px;margin:12px 0}
+.stars{display:flex;gap:4px;margin:10px 0}
+.stars button{border:0;background:none;font-size:34px;line-height:1;color:#d3dbd6;cursor:pointer;padding:0 2px}
+.stars button.on{color:#f5b301}
+.btn{display:inline-block;background:#1f9d62;color:#fff;border:0;border-radius:10px;padding:12px 20px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:disabled{opacity:.6}.btn.sec{background:#e6eee9;color:#1d2b24}.btn.red{background:#d9534f}.btn.sm{padding:5px 10px;font-size:.85rem}
+.ok{background:#e4f6ec;color:#176b43;padding:14px;border-radius:10px}
+.err{background:#fdeaea;color:#a12622;padding:10px 14px;border-radius:10px;margin:10px 0}
+.nav{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.nav a{color:#1f9d62;font-weight:600;text-decoration:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+.kpi{background:#f3f8f5;border-radius:12px;padding:12px}.kpi b{display:block;font-size:1.6rem}
+canvas{width:100%;max-width:100%;background:#fafcfb;border:1px solid #e1e8e3;border-radius:12px}
+table{width:100%;border-collapse:collapse;margin:8px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #e8eee9;font-size:.92rem}
+.tag{padding:2px 8px;border-radius:99px;font-size:.78rem}.tag.pending{background:#fff1cf}.tag.approved{background:#e4f6ec}.tag.hidden{background:#eee}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+.codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.ticket{border:1px dashed #999;border-radius:8px;padding:10px;text-align:center;font-family:monospace}.ticket div.qr{display:flex;justify-content:center;margin:6px 0}
+@media print{.noprint{display:none}body{background:#fff}.card{box-shadow:none;margin:0;max-width:none}}
